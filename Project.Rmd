@@ -58,7 +58,13 @@ ggplot(baseData, aes(x = GrossApproval, fill = BusinessType)) +
 ```
 
 ```{r}
+corporation = baseData %>% 
+  filter(BusinessType == "CORPORATION") 
 
+individual = baseData %>% 
+  filter(BusinessType == "INDIVIDUAL")
+  
+t.test(corporation$GrossApproval,individual$GrossApproval)
 ```
 
 
