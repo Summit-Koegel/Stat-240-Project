@@ -67,5 +67,44 @@ individual = baseData %>%
 t.test(corporation$GrossApproval,individual$GrossApproval)
 ```
 
+We are doing a two sample t-test for difference in gross loan approval means between corporation businesses and individual businesses issued by various institutions and recorded by the United States Small Business Administration.
 
+    - $H_0: \mu_C - \mu_I = 0$
+    - $H_a: \mu_C - \mu_I \neq 0$
+    
+The sample of gross approval per business type follows a right skewed distribution with unknown population mean and standard deviation under the null hypothesis
+    
+We will use the t-statistic to test the hypotheses.
 
+Under the null hypothesis, the t-statistic follows a t-distribution with 19 degrees of freedom!!!
+
+Interpretation: The p-value is extremely small which indicates that we have strong evidence to reject the null hypothesis and suggest the alternative hypothesis as the true difference in means of gross loan approval amount between the two business types.
+
+We will not construct a confidence interval to further explore this conclusion.
+
+```{r}
+n1 = as.numeric(mean_Approval[1,2])
+n2 = as.numeric(mean_Approval[2,2])
+xbar1 = as.numeric(mean_Approval[1,3])
+xbar2 = as.numeric(mean_Approval[2,3])
+s1 = as.numeric(mean_Approval[1,4])
+s2 = as.numeric(mean_Approval[2,4])
+
+n1
+se = sqrt((s1^2/n1) + (s2^2/n2))
+
+df = n1 + n2 - 2
+df
+
+t_stat = (xbar1 - xbar2) / se
+
+tcrit = qt(0.975, df)
+
+lower = (xbar1 - xbar2) - tcrit*se
+upper = (xbar1 - xbar2) + tcrit*se
+
+cat("The 95% confidence interval for the difference in means is         (",round(lower, 2), ",",round(upper, 2), ")")
+
+```
+
+We are 95% confident that the mean difference in gross loan amount approved between the two business types is between \$142,463.9 and $166,528.6
