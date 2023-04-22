@@ -1,3 +1,50 @@
+---
+title: "Project"
+output: html_document
+date: "2023-04-18"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE,
+                      warning = FALSE, error = TRUE, fig.height = 3)
+library(tidyverse)
+library(lubridate)
+library(kableExtra)
+library(broman)
+source("../scripts/viridis.R")
+source("../scripts/ggprob.R")
+theme_set(theme_minimal())
+```
+
+```{r}
+baseData = read_csv("Project.csv")
+
+baseData = baseData%>%
+  filter(ApprovalFiscalYear >= 2000 & ApprovalFiscalYear <= 2002)%>%
+  select(ApprovalFiscalYear, GrossApproval, BusinessType)%>%
+  drop_na%>%
+  group_by(BusinessType)%>%
+  filter(BusinessType == "INDIVIDUAL" | BusinessType == "CORPORATION")
+
+baseData
+```
+
+
+> Is there a difference in the mean loan amount between cooperation or Individuals? (Hypothsis test t- test)\
+
+
+Find the means for each BusinessType 
+```{r}
+mean_Approval = baseData%>%
+  group_by(BusinessType)%>%
+  summarize(n = n(),
+            xbar = mean(GrossApproval),
+            s = sd(GrossApproval))
+
+mean_Approval
+
+```
+
 ```{r}
 ggplot(baseData, aes(x = GrossApproval, fill = BusinessType)) +
   geom_density(alpha = 0.5) +
@@ -9,3 +56,10 @@ ggplot(baseData, aes(x = GrossApproval, fill = BusinessType)) +
   theme_minimal()
 
 ```
+
+```{r}
+
+```
+
+
+
