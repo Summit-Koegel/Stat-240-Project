@@ -36,13 +36,15 @@ Find the means for each BuisnessType
 ```{r}
 mean_Approval = baseData%>%
   group_by(BusinessType)%>%
-  summarize(mean = mean(GrossApproval))
+  summarize(n = n(),
+            xbar = mean(GrossApproval),
+            s = sd(GrossApproval))
+
+mean_Approval
 
 corp_mean = mean_Approval%>% filter(BusinessType == "CORPORATION")%>% pull(mean)
 Individual_mean = mean_Approval%>% filter(BusinessType == "INDIVIDUAL")%>% pull(mean)
 
 
 mean_Approval
-
-
 ```
