@@ -17,8 +17,32 @@ theme_set(theme_minimal())
 ```
 
 ```{r}
-data = read_csv("Project.csv")
+baseData = read_csv("Project.csv")
 
-data = data%>%
+baseData = data%>%
+  filter(ApprovalFiscalYear >= 2000 & ApprovalFiscalYear <= 2009)%>%
+  select(ApprovalFiscalYear, GrossApproval, BusinessType)%>%
+  drop_na%>%
+  group_by(BusinessType)%>%
+  filter(BusinessType == "INDIVIDUAL" | BusinessType == "CORPORATION")
   
+```
+
+
+> Is there a difference in the mean loan amount between cooperation or Individuals? (Hypothsis test t- test)\
+
+
+Find the means for each BuisnessType 
+```{r}
+mean_Approval = baseData%>%
+  group_by(BusinessType)%>%
+  summarize(mean = mean(GrossApproval))
+
+corp_mean = mean_Approval%>% filter(BusinessType == "CORPORATION")%>% pull(mean)
+Individual_mean = mean_Approval%>% filter(BusinessType == "INDIVIDUAL")%>% pull(mean)
+
+
+mean_Approval
+
+
 ```
