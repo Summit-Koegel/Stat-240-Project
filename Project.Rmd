@@ -42,9 +42,16 @@ mean_Approval = baseData%>%
 
 mean_Approval
 
-corp_mean = mean_Approval%>% filter(BusinessType == "CORPORATION")%>% pull(mean)
-Individual_mean = mean_Approval%>% filter(BusinessType == "INDIVIDUAL")%>% pull(mean)
+```
 
+```{r}
+ggplot(baseData, aes(x = GrossApproval, fill = BusinessType)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Sampling Distribution of Gross Approval Amount",
+       x = "Gross Approval",
+       y = "Density") +
+  scale_fill_manual(values = c("blue", "orange"),
+                    labels = c("INDIVIDUAL", "CORPORATION")) +
+  theme_minimal()
 
-mean_Approval
 ```
