@@ -1,14 +1,15 @@
 ---
-title: "INDIVIDUAL Vs. CORPORATION Loan Amount"
+title: "INDIVIDUAL Vs. PARTNERSHIP Loan Amount"
 output: html_document
 date: "2023-04-18"
 ---
 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, error = TRUE, fig.height = 3)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, error = TRUE, fig.height = 3)
 library(tidyverse)
 library(lubridate)
+library(ggplot2)
 library(kableExtra)
 library(broman)
 source("../scripts/viridis.R")
@@ -19,12 +20,12 @@ theme_set(theme_minimal())
 
 
 ## Introduction
-Small businesses are facing unprecedented challenges in today's economy, and access to funding remains a significant obstacle to their growth. To gain insight into lending practices and policies that can help support small businesses, we will be analyzing data from the US Small Business Administration's 504 lending program from 2006 to 2009, a period marked by the housing market crash and recession.Our focus will be on comparing the loan amounts granted to individual small businesses versus those granted to corporations during this challenging economic period. By examining this data, we aim to shed light on whether individual or corporate small businesses were hit harder by the economic downturn, and identify any patterns or trends that can inform future lending practices and policies. We believe that this analysis will provide valuable insights into the challenges faced by small businesses during economic crises, and inform policymakers and lending institutions on how best to support small business growth and resilience in the face of adversity. Join us as we explore the data and uncover the factors that impact small business funding.
+Small businesses are facing unprecedented challenges in today's economy, and access to funding remains a significant obstacle to their growth. To gain insight into lending practices and policies that can help support small businesses, we will be analyzing data from the US Small Business Administration's 504 lending program from 2006 to 2009, a period marked by the housing market crash and recession. Our focus will be on comparing the loan amounts granted to individual small businesses versus those granted to partnerships during this challenging economic period. By examining this data, we aim to shed light on whether individual or corporate small businesses were hit harder by the economic downturn, and identify any patterns or trends that can inform future lending practices and policies. We believe that this analysis will provide valuable insights into the challenges faced by small businesses during economic crises, and inform policymakers and lending institutions on how best to support small business growth and resilience in the face of adversity. Join us as we explore the data and uncover the factors that impact small business funding.
 
 ## Background
 #### (About the raw data)
 
-The US Small Business Administration's 504 lending program is a financing program designed to help small businesses purchase commercial real estate or equipment. It is one of several programs offered by the Small Business Administration (SBA), a government agency that provides support to small businesses in the United States. The 504 program is specifically designed to help small businesses acquire fixed assets, such as buildings or equipment, that are necessary for their operations. Under the program, the SBA guarantees loans made by certified development companies (CDCs), which are nonprofit organizations that work with lenders to provide financing to small businesses. To qualify for the 504 program, a small business must meet certain criteria, including a net worth of less than $15 million and an average net income of less than $5 million over the past two years. The business must also be able to demonstrate that the asset being purchased will create or retain jobs. The 504 program offers several advantages to small businesses, including low down payments (as low as 10%), long-term financing (up to 25 years), and fixed interest rates. The program also allows small businesses to finance up to 90% of the cost of the asset being purchased, with the remaining 10% provided by the business itself. Overall, the SBA's 504 lending program provides small businesses with an affordable and flexible financing option for acquiring fixed assets, which can help them grow and expand over the long term.
+The US Small Business Administration's 504 lending program is a financing program designed to help small businesses purchase commercial real estate or equipment. It is one of several programs offered by the Small Business Administration (SBA), a government agency that provides support to small businesses in the United States. The 504 program is specifically designed to help small businesses acquire fixed assets, such as buildings or equipment, that are necessary for their operations. Under the program, the SBA guarantees loans made by certified development companies (CDCs), which are nonprofit organizations that work with lenders to provide financing to small businesses. To qualify for the 504 program, a small business must meet certain criteria, including a net worth of less than $15 million and an average net income of less than $5 million over the past two years. The business must also be able to demonstrate that the asset being purchased will create or retain jobs. The 504 program offers several advantages to small businesses, including low down payments (as low as 10%), long-term financing (up to 25 years), and fixed interest rates. The program also allows small businesses to finance up to 90% of the cost of the asset being purchased, with the remaining 10% provided by the business itself. Overall, the SBA's 504 lending program provides businesses with an affordable and flexible financing option for acquiring fixed assets, which can help them grow and expand over the long term. Despite this criteria set for small businesses, it is noteworthy to say that, generally, corporations and partnership businesses tend to be larger than individual businesses and often take an unequal amount of funding due to their size and influence.
 
 #### Data
 Our research will be focusing on loans issued between 2006 and 2009 and how the loan amount varies between different business types and economic statuses. Specifically, we will be comparing a non-recession economy and a recession economy to analyze patterns and trends in lending practices and policies. The loan amount is a crucial variable to consider when looking at the economic health of the country, as it can significantly impact a small business's ability to grow and succeed. For example, if a small business owner needs a loan to purchase new equipment, a small loan amount may not be enough to improve their operations and stay competitive in their industry. On the other hand, a larger loan amount can help them invest in the equipment they need to improve their business and potentially increase their profits. By analyzing the years between 2006 and 2009, which include a recession and non-recession economy, we hope to provide insights into how small businesses can better access the funding they need to thrive. Additionally, we aim to inform policymakers and lenders about potential gaps or disparities in lending practices based on our findings.
@@ -32,39 +33,125 @@ Our research will be focusing on loans issued between 2006 and 2009 and how the 
 
 #### Data Citation
 7(a) & 504 FOIA - FOIA - 504 (FY1991-FY2009) asof 221231.csv - U.S. Small Business Administration (SBA) | Open Data. (2023) https://data.sba.gov/dataset/7-a-504-foia/resource/ed462be9-e44f-45c6-818d-fca9b68cfeeb 
+
+Economic Security Index: http://economicsecurityindex.org/
  
 
 ```{r  echo = FALSE}
-baseData = read_csv("Project.csv")
-baseData = baseData%>%
+Data = read_csv("Project.csv")
+baseData = Data%>%
   filter(ApprovalFiscalYear >= 2006 & ApprovalFiscalYear <= 2009)%>%
   select(ApprovalFiscalYear, GrossApproval, BusinessType)%>%
   drop_na%>%
   group_by(BusinessType)%>%
-  filter(BusinessType == "INDIVIDUAL" | BusinessType == "CORPORATION")
+  filter(BusinessType == "INDIVIDUAL" | BusinessType == "PARTNERSHIP")
 
 baseData
   
 ```
 
 ### Analysis
-> In this dataset, we have information on two different types of businesses: Corporations and Individuals. We will analyze the total number of businesses for each type and the total amount of money they received overall.
+> In this dataset, we have information on two different types of businesses: Partnership and Individual and two different time periods: 2006(before the recession) and 2008(during the recession). We will analyze the Gross Approved Loan Amount both types of businesses received during these two time periods with four boxplots and observe what their summary these summary statistics might say about the data.
 
 ```{r echo = FALSE}
-Num_bus= baseData %>%
-  group_by(BusinessType)
-  #summarize(Number_of_Buissnesses = n(),
-            #Total = sum(GrossApproval))
-Num_bus
 
+data_2006 = baseData %>%
+  group_by(BusinessType) %>%
+  filter(ApprovalFiscalYear == 2006)
 
+data_2008 = baseData %>%
+  group_by(BusinessType) %>%
+  filter(ApprovalFiscalYear == 2008)
 
-plot1 = ggplot(Num_bus, aes(x= BusinessType, y =GrossApproval)) +
-  geom_boxplot()
-plot1
+data_2006
+data_2008
 
+data = rbind(data_2006, data_2008)
+
+box = ggplot(data, aes(x= BusinessType, y =GrossApproval/100000, color=BusinessType, fill=BusinessType)) +
+  geom_boxplot() +
+  scale_fill_manual(name= "Business Type", values = c("grey40", "lightskyblue"))+
+  scale_color_manual(name = "Business Type", values = c("black", "blue"))+
+  ylab("Gross Approval in USD(Hundred Thousand)")+
+  xlab("2006                                                                                                               2008")+
+  labs(title = "Gross Approved Loan Amount by Business Type",
+       subtitle = "Before and After the Great Recession")+
+  
+  theme(axis.text.x = element_blank())+
+  facet_wrap(~ ApprovalFiscalYear, ncol = 2)
+  
+box
 ```
->This graph shows us that Corporations recieved a much greater total amount of money when compared to individual buisnesses, however, there is also a much greater amount of Corporations than Individual Buisinesses. To obtain these numbers we added up the total number of buisness for each type along with adding up the total loan amount they were approved for. We will now look at the proportional loan amount that each one of these buisnesses recieved, to determine if this great difference is primarly becuase of the difference in number of buissness rather than how much they are being aprroved for.
+>This graph shows us that partnerships recieved a much greater total amount of money when compared to individual buisnesses, however, there is also a much greater amount of partnerships than Individual Buisinesses. To obtain these numbers we added up the total number of buisness for each type along with adding up the total loan amount they were approved for. We will now look at the proportional loan amount that each one of these buisnesses recieved, to determine if this great difference is primarly becuase of the difference in number of buissness rather than how much they are being aprroved for.
+
+The Economic Security Index did a ranking of the states that got hit hardest from the Great Recession. Here we will compare the 10 states that showed the largest increase in economic insecurity during this time with 10 states that showed the smallest increase. We will observe the average gross loan approval of each of these sets of 10 states to compare how the mean loan amounts awarded to individual and partnership businesses changed before and after this financial crisis.
+
+```{r}
+stateData = Data%>%
+  filter(ApprovalFiscalYear >= 2006 & ApprovalFiscalYear <= 2009)%>%
+  select(ApprovalFiscalYear, GrossApproval, BusinessType, BorrState)%>%
+  drop_na%>%
+  group_by(BusinessType)%>%
+  filter(BusinessType == "INDIVIDUAL" | BusinessType == "PARTNERSHIP")
+```
+
+
+```{r}
+# Florida 2006
+florida_2006 <- stateData %>% 
+  filter((BorrState == "FL" | BorrState =="CA" | BorrState =="NY" | BorrState =="OR" | BorrState =="MS" | BorrState =="AR" | BorrState =="AL" | BorrState =="GA" | BorrState =="MT" | BorrState =="ME"), ApprovalFiscalYear == 2006)%>%
+  group_by(BusinessType) %>%
+  summarize(mean_approval = mean(GrossApproval)) %>%
+  ggplot(aes(x = BusinessType, y = mean_approval/10000, fill = BusinessType)) +
+  geom_bar(stat = "identity") +
+  ylab("Average Gross Approval in USD(Ten Thousand)") +
+  ylim(0,100) +
+  labs(title = "Loan Amount Difference in Florida",
+       subtitle = "Before Great Recession")
+
+# Florida 2008
+florida_2008 <- stateData %>% 
+  filter((BorrState == "FL" | BorrState =="CA" | BorrState =="NY" | BorrState =="OR" | BorrState =="MS" | BorrState =="AR" | BorrState =="AL" | BorrState =="GA" | BorrState =="MT" | BorrState =="ME"), ApprovalFiscalYear == 2008) %>% 
+  group_by(BusinessType) %>% 
+  summarize(mean_approval = mean(GrossApproval)) %>% 
+  ggplot(aes(x = BusinessType, y = mean_approval/10000, fill = BusinessType)) +
+  geom_bar(stat = "identity") +
+  ylim(0,100) +
+  ylab("Average Gross Approval in USD(Ten Thousand)") +
+  labs(title = "Loan Amount Difference in Florida",
+       subtitle = "After Great Recession")
+
+florida_2006
+florida_2008
+
+# Wisconsin 2006
+wisconsin_2006 <- stateData %>% 
+  filter((BorrState == "WA" | BorrState =="NE" | BorrState =="MN" | BorrState =="WI" | BorrState =="MI" | BorrState =="NH" | BorrState =="DE" | BorrState =="CT" | BorrState =="IA" | BorrState =="IL"), ApprovalFiscalYear == 2006) %>% 
+  group_by(BusinessType) %>% 
+  summarize(mean_approval = mean(GrossApproval)) %>% 
+  ggplot(aes(x = BusinessType, y = mean_approval/10000, fill = BusinessType)) +
+  geom_bar(stat = "identity") +
+  ylim(0,100) +
+  ylab("Average Gross Approval in USD(Ten Thousand)") +
+  labs(title = "Loan Amount Difference in Wisconsin",
+       subtitle = "Before Great Recession")
+
+# Florida 2008
+wisconsin_2008 <- stateData %>% 
+  filter((BorrState == "WA" | BorrState =="NE" | BorrState =="MN" | BorrState =="WI" | BorrState =="MI" | BorrState =="NH" | BorrState =="DE" | BorrState =="CT" | BorrState =="IA" | BorrState =="IL"), ApprovalFiscalYear == 2008) %>% 
+  group_by(BusinessType) %>% 
+  summarize(mean_approval = mean(GrossApproval)) %>% 
+  ggplot(aes(x = BusinessType, y = mean_approval/10000, fill = BusinessType)) +
+  geom_bar(stat = "identity") +
+  ylim(0,100) +
+  ylab("Average Gross Approval in USD(Ten Thousand)") +
+  labs(title = "Loan Amount Difference in Wisconsin",
+       subtitle = "After Great Recession")
+
+wisconsin_2006
+wisconsin_2008
+```
+We can see from the graphs that the states that faired well during the Great Recession were able to continue supporting smaller individual businesses and even appeared to have diverted hundreds of thousands of dollars from partnership business into individual businesses to support smaller business growth. On the otherhand, states that got showed more economic insecurity did the exact opposite and gave larger loan amounts to partnership businesses. This correlation shows that during this financial crisis some states began change who they issued loans to and thus this might suggest that the mean gross approved loan amount before and after the Great Recession is different.
 
 
 ```{r}
@@ -87,7 +174,7 @@ baseData_no_outliers
 ```
 
 
-Is the total amount of money received proportional to the number of corporations and number of individual busisness
+Is the total amount of money received proportional to the number of partnerships and number of individual busisness
 
 
 Find the means for each BusinessType and the difference
@@ -100,7 +187,7 @@ mean_Approval = baseData%>%
 mean_Approval
 ```
 
->There seems to be a very distint difference in the average amount of money that corporations recieved and the indivual buisnesses recieved. We are able to see that corporation on average recieved $448,756.20 while individual business recieved 294,396.10 dollars. We are also able to see that the standard deviation for amount receieved from corporations is also much larger than the standard deviation that the individual buisness received.  We can not rule out that this did not happen by chance though.  We will conduct a Hypothsis t-test difference in menas inorder to look at if this difference in average total loan amount difference or greater could happen by chance alone. 
+>There seems to be a very distint difference in the average amount of money that partnerships recieved and the indivual buisnesses recieved. We are able to see that partnerships on average recieved $448,756.20 while individual business recieved 294,396.10 dollars. We are also able to see that the standard deviation for amount receieved from partnerships is also much larger than the standard deviation that the individual buisness received.  We can not rule out that this did not happen by chance though.  We will conduct a Hypothsis t-test difference in menas inorder to look at if this difference in average total loan amount difference or greater could happen by chance alone. 
 
 > Is there a difference in the mean loan amount between cooperation or Individuals? (Hypothsis test t- test difference in means)
 
@@ -127,32 +214,32 @@ Ha: Mu != 0
 # Set seed for reproducibility
 #set.seed(123)
 
-# Take simple random sample of 500 individual businesses and 500 corporation businesses from 2006
-sample_ind_2006 <- baseData_no_outliers %>% 
+# Take simple random sample of 500 individual businesses and 500 partnership businesses from 2006
+sample_ind_2006 <- baseData %>% 
   filter(ApprovalFiscalYear == 2006) %>% 
   group_by(BusinessType) %>%
   filter(BusinessType == "INDIVIDUAL")%>%
   sample_n(size = 50, replace = FALSE)
 
-# Take simple random sample of 500 individual businesses and 500 corporation businesses from 2008
-sample_ind_2008 <- baseData_no_outliers %>% 
+# Take simple random sample of 500 individual businesses and 500 partnership businesses from 2008
+sample_ind_2008 <- baseData %>% 
   filter(ApprovalFiscalYear == 2008) %>% 
   group_by(BusinessType) %>% 
   filter(BusinessType == "INDIVIDUAL")%>%
   sample_n(size = 50, replace = FALSE)
 
-# Take simple random sample of 500 individual businesses and 500 corporation businesses from 2006
-sample_cor_2006 <- baseData_no_outliers %>% 
+# Take simple random sample of 500 individual businesses and 500 partnership businesses from 2006
+sample_cor_2006 <- baseData %>% 
   filter(ApprovalFiscalYear == 2006) %>% 
   group_by(BusinessType) %>%
-  filter(BusinessType == "CORPORATION")%>%
+  filter(BusinessType == "PARTNERSHIP")%>%
   sample_n(size = 50, replace = FALSE)
 
-# Take simple random sample of 500 individual businesses and 500 corporation businesses from 2008
-sample_cor_2008 <- baseData_no_outliers %>% 
+# Take simple random sample of 500 individual businesses and 500 partnership businesses from 2008
+sample_cor_2008 <- baseData %>% 
   filter(ApprovalFiscalYear == 2008) %>% 
   group_by(BusinessType) %>% 
-  filter(BusinessType == "CORPORATION")%>%
+  filter(BusinessType == "PARTNERSHIP")%>%
   sample_n(size = 50, replace = FALSE)
 
 
@@ -172,14 +259,14 @@ sample_2008$log_GrossApproval <- log(sample_2008$GrossApproval)
 Graph of the mean sampling distribution
 ```{r echo = FALSE}
 
-ggplot(baseData_no_outliers, aes(x = GrossApproval, fill = BusinessType)) +
-  geom_density(alpha = 0.5) +
-  labs(title = "Sampling Distribution of Gross Approval Amount",
-       x = "Gross Approval",
-       y = "Density") +
-  scale_fill_manual(values = c("blue", "orange"),
-                    labels = c("INDIVIDUAL", "CORPORATION")) +
-  theme_minimal()
+# ggplot(baseData_no_outliers, aes(x = GrossApproval, fill = BusinessType)) +
+#   geom_density(alpha = 0.5) +
+#   labs(title = "Sampling Distribution of Gross Approval Amount",
+#        x = "Gross Approval",
+#        y = "Density") +
+#   scale_fill_manual(values = c("blue", "orange"),
+#                     labels = c("INDIVIDUAL", "PARTNERSHIP")) +
+#   theme_minimal()
 
 ggplot(sample_2006, aes(x = GrossApproval, fill = BusinessType)) +
   geom_density(alpha = 0.5) +
@@ -187,7 +274,7 @@ ggplot(sample_2006, aes(x = GrossApproval, fill = BusinessType)) +
        x = "Gross Approval",
        y = "Density") +
   scale_fill_manual(values = c("blue", "orange"),
-                    labels = c("INDIVIDUAL", "CORPORATION")) +
+                    labels = c("INDIVIDUAL", "PARTNERSHIP")) +
   theme_minimal()
 
 ggplot(sample_2008, aes(x = GrossApproval, fill = BusinessType)) +
@@ -196,23 +283,40 @@ ggplot(sample_2008, aes(x = GrossApproval, fill = BusinessType)) +
        x = "Gross Approval",
        y = "Density") +
   scale_fill_manual(values = c("blue", "orange"),
-                    labels = c("INDIVIDUAL", "CORPORATION")) +
+                    labels = c("INDIVIDUAL", "PARTNERSHIP")) +
   theme_minimal()
 ```
 
 
 
 ```{r echo = FALSE}
-corporation = baseData %>% 
-  filter(BusinessType == "CORPORATION") 
-individual = baseData %>% 
-  filter(BusinessType == "INDIVIDUAL")
-  
-t.test(corporation$GrossApproval,individual$GrossApproval)
-```
-This a Welch Two Sample t-test on the Gross Approval amounts for Corporations and Individuals. The purpose of this test is to compare the means of two independent groups to determine if there is a significant difference between them. The t-test result shows a t-value of 25.135 and a degrees of freedom (df) of 2946. The p-value is extremely small (< 2.2e-16), indicating that there is a statistically significant difference between the means of the Gross Approval amounts for Corporations and Individuals.
+test_2006 <- baseData %>%
+  filter(ApprovalFiscalYear == 2006)
 
-The alternative hypothesis states that the true difference in means is not equal to 0, and given the results, we have evidence to support this claim. The 95% confidence interval for the difference in means ranges from 142,318.7 to 166,401.5. 
+test_2008 <- baseData %>%
+  filter(ApprovalFiscalYear == 2008)
+
+t.test(test_2006$GrossApproval[test_2006$BusinessType == "PARTNERSHIP"], 
+       test_2006$GrossApproval[test_2006$BusinessType == "INDIVIDUAL"])
+
+t.test(test_2008$GrossApproval[test_2008$BusinessType == "PARTNERSHIP"], 
+       test_2008$GrossApproval[test_2008$BusinessType == "INDIVIDUAL"])
+
+# mean_Approval = baseData%>%
+#   group_by(BusinessType)%>%
+#   summarize(n = n(),
+#             xbar = mean(GrossApproval),
+#             s = sd(GrossApproval))
+# mean_Approval
+# 
+# individual = baseData %>% 
+#   filter(BusinessType == "INDIVIDUAL")
+#   
+# t.test(partnership$GrossApproval,individual$GrossApproval)
+```
+This a Welch Two Sample t-test on the Gross Approval amounts for partnerships and Individuals during 2006 and 2008. The purpose of this test is to compare the means of two independent groups to determine if there is a significant difference between them. The t-test result shows a t-value of 16.132 and a degrees of freedom (df) of 1045.5. The p-value is extremely small (< 2.2e-16), indicating that there is a statistically significant difference between the means of the Gross Approval amounts for partnerships and Individuals.
+
+The alternative hypothesis states that the true difference in means is not equal to 0, and given the results, we have evidence to support this claim. The 95% confidence interval for the difference in means ranges from $269,689 to $344,382. 
 
 
     - $H_0: \mu_C - \mu_I = 0$
@@ -222,8 +326,6 @@ The alternative hypothesis states that the true difference in means is not equal
 The sample of gross approval per business type follows a right skewed distribution with unknown population mean and standard deviation under the null hypothesis
     
 We will use the t-statistic to test the hypotheses.
-
-Under the null hypothesis, the t-statistic follows a t-distribution with 19 degrees of freedom!!!
 
 Interpretation: The p-value is extremely small which indicates that we have strong evidence to reject the null hypothesis and suggest the alternative hypothesis as the true difference in means of gross loan approval amount between the two business types.
 
@@ -244,9 +346,9 @@ t_stat = (xbar1 - xbar2) / se
 tcrit = qt(0.975, df)
 lower = (xbar1 - xbar2) - tcrit*se
 upper = (xbar1 - xbar2) + tcrit*se
-cat("The 95% confidence interval for the difference in means is  (",round(lower, 2), ",",round(upper, 2), ")")
+cat("The 95% confidence interval for the difference in means is  (",round(lower, 0), ",",round(upper, 0), ")")
 ```
-This is a 95% confidence interval for the difference in means of the gross loan approval amount between the two business types (Corporations and Individuals). It assumes that the sample of gross approval per business type follows a right-skewed distribution with unknown population mean and standard deviation under the null hypothesis.
+This is a 95% confidence interval for the difference in means of the gross loan approval amount between the two business types (partnerships and Individuals). It assumes that the sample of gross approval per business type follows a right-skewed distribution with unknown population mean and standard deviation under the null hypothesis.
 
 The t-statistic is used to test the hypotheses, and under the null hypothesis, it follows a t-distribution with 19 degrees of freedom. Since the p-value is extremely small, there is strong evidence to reject the null hypothesis and support the alternative hypothesis, which claims that there is a true difference in the means of gross loan approval amounts between the two business types.
 
@@ -254,11 +356,11 @@ We are 95% confident that the mean difference in gross loan amount approved betw
 
 
 ## Disscusion
-In our analysis of the US Small Business Administration's 504 lending program data between 2000 and 2002, we investigated the extent to which the loan amount varies between different business types (Corporations and Individuals) and across different years. Our primary objective was to gain insights into which types of small businesses received the highest levels of funding and whether or not these funding levels changed over time.
+In our analysis of the US Small Business Administration's 504 lending program data between 2000 and 2002, we investigated the extent to which the loan amount varies between different business types (partnerships and Individuals) and across different years. Our primary objective was to gain insights into which types of small businesses received the highest levels of funding and whether or not these funding levels changed over time.
 
-Our analysis revealed that Corporations received a much greater total amount of money compared to Individual businesses during the studied period. However, there were also a greater number of Corporations than Individual businesses. To account for this discrepancy, we focused on the proportional loan amount that each business type received. We found that there is a significant difference in the average loan amount approved for Corporations and Individuals. Corporations received, on average, $448,756.20, while Individual businesses received $294,396.10.
+Our analysis revealed that partnerships received a much greater total amount of money compared to Individual businesses during the studied period. However, there were also a greater number of partnerships than Individual businesses. To account for this discrepancy, we focused on the proportional loan amount that each business type received. We found that there is a significant difference in the average loan amount approved for partnerships and Individuals. partnerships received, on average, $448,756.20, while Individual businesses received $294,396.10.
 
-To further support our findings, we conducted a Welch Two Sample t-test on the Gross Approval amounts for Corporations and Individuals. The test results showed a statistically significant difference between the means of the Gross Approval amounts for the two business types. We also constructed a 95% confidence interval for the difference in means, which provided an estimated range of $142,463.9 to $166,528.6 for the true difference in means of gross loan approval amounts between Corporations and Individuals.
+To further support our findings, we conducted a Welch Two Sample t-test on the Gross Approval amounts for partnerships and Individuals. The test results showed a statistically significant difference between the means of the Gross Approval amounts for the two business types. We also constructed a 95% confidence interval for the difference in means, which provided an estimated range of $142,463.9 to $166,528.6 for the true difference in means of gross loan approval amounts between partnerships and Individuals.
 
 ### Limitations and Future Directions
 While our analysis provides valuable insights, there are some potential shortcomings:
@@ -272,9 +374,9 @@ The analysis does not account for other factors that might influence loan approv
 Our analysis could be further refined by examining the distribution of loan amounts within each business categroies. This could help identify potential disparities in funding levels for different types of businesses within each category.
 
 ### Conclusion
-In conclusion, our analysis of the US Small Business Administration's 504 lending program data for the years 2000 to 2002 revealed a significant difference in the mean loan amount approved for Corporations and Individuals. This finding underscores the importance of understanding the factors that determine the amount of funding received by different types of small businesses, as it can significantly impact their ability to grow and succeed.
+In conclusion, our analysis of the US Small Business Administration's 504 lending program data for the years 2000 to 2002 revealed a significant difference in the mean loan amount approved for partnerships and Individuals. This finding underscores the importance of understanding the factors that determine the amount of funding received by different types of small businesses, as it can significantly impact their ability to grow and succeed.
 
-The observed differences in loan amounts between Corporations and Individuals may have various implications for policymakers, lenders, and entrepreneurs alike. It is crucial to recognize the potential disparities in access to funding for different types of businesses and to consider measures to address these disparities to ensure a level playing field for all business types. 
+The observed differences in loan amounts between partnerships and Individuals may have various implications for policymakers, lenders, and entrepreneurs alike. It is crucial to recognize the potential disparities in access to funding for different types of businesses and to consider measures to address these disparities to ensure a level playing field for all business types. 
 
 
-In summary, our primary conclusions are that there is a significant difference in the mean loan amount approved for Corporations and Individuals, and that this difference could have a meaningful impact on the growth and success of these businesses. By addressing the disparities in access to funding and implementing policies that ensure equitable access for all small businesses, we can foster a thriving and inclusive entrepreneurial ecosystem that drives economic growth and job creation in the United States.
+In summary, our primary conclusions are that there is a significant difference in the mean loan amount approved for partnerships and Individuals, and that this difference could have a meaningful impact on the growth and success of these businesses. By addressing the disparities in access to funding and implementing policies that ensure equitable access for all small businesses, we can foster a thriving and inclusive entrepreneurial ecosystem that drives economic growth and job creation in the United States.
